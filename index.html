@@ -30,12 +30,11 @@ h2{font-size:16px;margin:0 0 17px}.stats{display:grid;grid-template-columns:repe
     <form id="sessionForm">
       <div class="formgrid">
         <div class="field"><label for="date">Date</label><input id="date" type="date" required></div>
-        <div class="field"><label for="hours">Heures</label><input id="hours" type="number" min="0" max="24" step="1" value="0" required></div>
-        <div class="field"><label for="minutes">Minutes</label><input id="minutes" type="number" min="0" max="59" step="1" value="0" required></div>
+        <div class="field"><label for="duration">Durée de la session</label><input id="duration" type="text" inputmode="text" placeholder="Ex. 1h07" pattern="[0-9]+h[0-5][0-9]" required></div>
         <button class="btn" type="submit">＋ Ajouter</button>
       </div>
     </form>
-    <p class="hint">Indique la durée exacte de ta session, par exemple 1 heure et 7 minutes.</p>
+    <p class="hint">Entre directement la durée au format heures et minutes, par exemple 1h07.</p>
   </section>
   <section class="panel">
     <div class="history-head"><h2>Historique des sessions</h2><button class="clear" id="clearBtn" type="button">Tout effacer</button></div>
@@ -69,11 +68,13 @@ function render(){
 $('date').value=new Date().toLocaleDateString('en-CA');
 $('sessionForm').addEventListener('submit',e=>{
  e.preventDefault();
- const date=$('date').value,hours=Number($('hours').value),mins=Number($('minutes').value);
- if(!date||!Number.isInteger(hours)||hours<0||hours>24||!Number.isInteger(mins)||mins<0||mins>59||hours*60+mins<=0){notify('Entre une durée valide.');return;}
- const minutes=hours*60+mins;
+ const date=$('date').value,duration=$('duration').value.trim().toLowerCase();
+ const match=duration.match(/^(\\d+)h([0-5]\\d)$/);
+ if(!date||!match){notify('Utilise le format 1h07 (heures et minutes).');return;}
+ const minutes=Number(match[1])*60+Number(match[2]);
+ if(minutes<=0||minutes>1440){notify('Entre une durée valide (maximum 24h).');return;}
  sessions.push({id:crypto.randomUUID?crypto.randomUUID():String(Date.now()),date,minutes});
- save();$('hours').value='0';$('minutes').value='0';notify('Session ajoutée au logbook !');
+ save();$('duration').value='';notify('Session ajoutée au logbook !');
 });
 $('history').addEventListener('click',e=>{
  const btn=e.target.closest('[data-id]');if(!btn)return;
