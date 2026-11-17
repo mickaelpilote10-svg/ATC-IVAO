@@ -30,11 +30,12 @@ h2{font-size:16px;margin:0 0 17px}.stats{display:grid;grid-template-columns:repe
     <form id="sessionForm">
       <div class="formgrid">
         <div class="field"><label for="date">Date</label><input id="date" type="date" required></div>
-        <div class="field"><label for="hours">Durée (heures)</label><input id="hours" type="number" min="0.01" max="24" step="0.01" placeholder="Ex. 2.5" required></div>
+        <div class="field"><label for="hours">Heures</label><input id="hours" type="number" min="0" max="24" step="1" value="0" required></div>
+        <div class="field"><label for="minutes">Minutes</label><input id="minutes" type="number" min="0" max="59" step="1" value="0" required></div>
         <button class="btn" type="submit">＋ Ajouter</button>
       </div>
     </form>
-    <p class="hint">Saisis directement la durée de ta session en heures. Exemple : 1.5 = 1 h 30.</p>
+    <p class="hint">Indique la durée exacte de ta session, par exemple 1 heure et 7 minutes.</p>
   </section>
   <section class="panel">
     <div class="history-head"><h2>Historique des sessions</h2><button class="clear" id="clearBtn" type="button">Tout effacer</button></div>
@@ -56,7 +57,7 @@ function render(){
  const total=sessions.reduce((s,x)=>s+(Number(x.minutes)||0),0);
  $('total').innerHTML=`${Math.floor(total/60)}h ${pad(total%60)}<span class="unit">min</span>`;
  $('count').textContent=sessions.length;
- $('average').innerHTML=`${sessions.length?Math.round(total/sessions.length):0}<span class="unit">min</span>`;
+ $('average').innerHTML=`${minutesLabel(sessions.length?Math.round(total/sessions.length):0)}<span class="unit">moy.</span>`;
  const sorted=[...sessions].sort((a,b)=>b.date.localeCompare(a.date)||(b.id||'').localeCompare(a.id||''));
  $('history').innerHTML=sorted.length?sorted.map(x=>`
   <div class="entry">
@@ -68,11 +69,11 @@ function render(){
 $('date').value=new Date().toLocaleDateString('en-CA');
 $('sessionForm').addEventListener('submit',e=>{
  e.preventDefault();
- const date=$('date').value,hours=Number($('hours').value);
- if(!date||!Number.isFinite(hours)||hours<=0||hours>24){notify('Entre une durée valide (0 à 24 heures).');return;}
- const minutes=Math.round(hours*60);
+ const date=$('date').value,hours=Number($('hours').value),mins=Number($('minutes').value);
+ if(!date||!Number.isInteger(hours)||hours<0||hours>24||!Number.isInteger(mins)||mins<0||mins>59||hours*60+mins<=0){notify('Entre une durée valide.');return;}
+ const minutes=hours*60+mins;
  sessions.push({id:crypto.randomUUID?crypto.randomUUID():String(Date.now()),date,minutes});
- save();$('hours').value='';notify('Session ajoutée au logbook !');
+ save();$('hours').value='0';$('minutes').value='0';notify('Session ajoutée au logbook !');
 });
 $('history').addEventListener('click',e=>{
  const btn=e.target.closest('[data-id]');if(!btn)return;
